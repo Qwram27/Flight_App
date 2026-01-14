@@ -30,7 +30,7 @@
                vel: {x: 0, y: 0}, // Velocity
                angle: 0, // Angle
                mass: 1100, // kg
-               wingArea: 17, // m^2
+               wingArea: 20, // m^2
                throttle: 0, // Throttle amount (0-1)
                thrust: 0, // Newtons
                maxThrust: 5000 // Newtons
@@ -78,19 +78,22 @@
                player.angle += rotationSpeed;
 
                // 1. Update the physics
-                    // Velocity
+                    // Velocity and Airspeed
                     let v2 = (player.vel.x ** 2) + (player.vel.y ** 2);
-                    let speed = Math.sqrt(v2)
+                    let speed = Math.sqrt(v2);
 
                     // Angle of Attack (AoA), angle of the nose relative to movement
-                    let flightAngle = Math.atan2(player.vel.y, player.vel.x);
-                    let AoA = player.angle - flightAngle
+                    let flightAngle = speed < 0.1 ? 0: Math.atan2(player.vel.y, player.vel.x);
+                    let AoA = player.angle - flightAngle;
+
+                    if (AoA > 0.4) AoA = 0.4;
+                    if (AoA < -0.4) AoA = -0.4;
 
                     // Coefficients
                     let Cl = Math.sin(AoA * 2)
                     let Cd = 0.02 + Math.pow(Cl, 2) / (Math.PI * 7)
 
-                    // Force
+                    // Force, Lift Equation
                     let liftForce = 0.5 * rho * v2 * player.wingArea * Cl;
                     let dragForce = 0.5 * rho * v2 * player.wingArea * Cd;
 
@@ -102,17 +105,25 @@
                     let dragX = -dragForce * Math.cos(flightAngle);
                     let dragY = -dragForce * Math.sin(flightAngle);
 
-                    console.log(dragForce)
-
                     // Thrust components
-                    player.thrust = player.throttle * player.maxThrust
-
+                    player.thrust = player.throttle * player.maxThrust;
                     let thrustX = Math.cos(player.angle) * player.thrust;
                     let thrustY = Math.sin(player.angle) * player.thrust;
 
-                    // Total Forces
+                    // Net Forces
                     let totalForceX = thrustX + dragX + liftX;
                     let totalForceY = thrustY + dragY + liftY + (player.mass * -9.81);
+
+                    // Landing Gear
+                    if (player.pos.y < 0) {
+                         player.pos.y = 0;
+
+                         if (totalForceY < 0) totalForceY = 0;
+                         player.vel.y = 0;
+                    
+                         // Add "Rolling Friction"
+                         totalForceX -= player.vel.x * (player.mass * 0.2);
+                    }
 
                     // Acceleration (a = F/m)
                     let ax = totalForceX / player.mass;
@@ -126,15 +137,9 @@
                     player.pos.x += player.vel.x;
                     player.pos.y += player.vel.y;
 
-               // 2. Logic
-               if (player.pos.y < 0) {
-                    player.pos.y = 0;
-                    player.vel.y = Math.max(0, player.vel.y);
-                    
-                    // Add "rolling friction"
-                    player.vel.x *= 0.995;
-               }
+                    //console.log()
 
+               // 2. Logic
                if (player.pos.y > canvas.height - 50) {
                     player.pos.y = canvas.height - 50;
                }
