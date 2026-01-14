@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+     <title>Test App</title>
+     <style>
+          body { margin: 0; background-color: #111; overflow: hidden; }
+          canvas { display: block; }
+     </style>
+</head>
+<body>
+     <canvas id="screen"></canvas>
+
+     <script>
+          // JavaScript
+          const canvas = document.getElementById('screen');
+          const ctx = canvas.getContext('2d');
+
+          // Set the size of canvas to the window size
+          canvas.width = window.innerWidth
+          canvas.height = window.innerHeight
+
+          // Move (0, 0) to bottom left
+          //ctx.translate(0, canvas.height);
+          //ctx.scale(1, -1);
+
+          let keys = {};
+
+          let player = {
+               pos: {x: 500, y: 500}, // Position
+               vel: {x: 0, y: 0}, // Velocity
+               acc: {x: 0, y: -0.2}, // Acceleration
+               angle: 0, // Angle
+               thrustPower: 0.05, // Thrust
+               dragFactor: 0.99, // Air resistance
+
+          };
+
+          window.addEventListener('mousedown', () => keys['Mouse'] = true);
+          window.addEventListener('mouseup', () => keys['Mouse'] = false);
+
+          window.addEventListener('keydown', function(event) {
+               if (event.key === "ArrowUp") {
+                    keys[event.key] = true;
+               }
+               if (event.key === "ArrowDown") {
+                    keys[event.key] = true;
+               }
+          })
+
+          window.addEventListener('keyup', function(event) {
+               if (event.key === "ArrowUp") {
+                    keys[event.key] = false;
+               }
+               if (event.key === "ArrowDown") {
+                    keys[event.key] = false;
+               }
+          })
+
+          function update() {
+               // 0. Inputs
+               if (keys.ArrowUp) { player.angle += 0.01; }
+               if (keys.ArrowDown) { player.angle -= 0.01; }
+
+               if (keys['Mouse']) {
+                    player.vel.y += Math.cos(player.angle) * player.thrustPower;
+                    player.vel.x += Math.sin(player.angle) * player.thrustPower;
+               }
+
+               // 1. Update the physics
+                    // Apply Gravity
+                    player.vel.x += player.acc.x
+                    player.vel.y += player.acc.y
+
+                    // Apply Drag
+                    player.vel.x *= player.dragFactor;
+                    player.vel.y *= player.dragFactor;
+
+                    // Lift
+                    let liftAmount = player.vel.x * Math.sin(player.angle) * 0.1;
+                    player.vel.y += liftAmount
+                    
+                    // Move Position
+                    player.pos.x += player.vel.x
+                    player.pos.y += player.vel.y
+
+               // 2. Logic
+               if (player.pos.y < 0) {
+                    player.pos.y = 0;
+                    player.vel.y = 0;
+                    
+                    // Add "rolling friction"
+                    player.vel.x *= 0.99;
+               }
+
+               if (player.pos.y > canvas.height - 50) {
+                    player.pos.y = canvas.height - 50;
+               }
+
+               if (player.pos.x > canvas.width || player.pos.x < 0) {
+                    player.pos.x = 0;
+               }
+
+               // Rendering
+               ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+               let screenY = canvas.height - player.pos.y - 40;
+
+               ctx.fillStyle = "#40AA1A";
+               ctx.fillRect(player.pos.x, screenY, 40, 40);
+
+
+               ctx.strokeStyle = "#40DC22";
+               ctx.lineWidth = 5;
+               ctx.beginPath();
+               ctx.moveTo(player.pos.x + 20, screenY + 20);
+
+               ctx.lineTo(player.pos.x + 20 + Math.cos(player.angle) * 50, screenY + 20 - Math.sin(player.angle) * 50);
+               ctx.stroke();
+
+               // Render loop
+               requestAnimationFrame(update);
+          }
+
+          // Run the engine
+          update();
+     </script>
+</body>
+</html>
