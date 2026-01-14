@@ -26,14 +26,18 @@
           let keys = {};
 
           let player = {
-               pos: {x: 500, y: 500}, // Position
+               pos: {x: 250, y: 500}, // Position
                vel: {x: 0, y: 0}, // Velocity
-               acc: {x: 0, y: -0.2}, // Acceleration
                angle: 0, // Angle
-               thrustPower: 0.2, // Thrust
-               dragFactor: 0.99, // Air resistance
+               mass: 1100, // kg
+               wingArea: 17, // m^2
+               throttle: 0, // Throttle amount (0-1)
+               thrust: 0, // Newtons
+               maxThrust: 5000 // Newtons
 
           };
+
+          const rho = 1.22 // kg/m^3
 
           window.addEventListener('mousedown', () => keys['Mouse'] = true);
           window.addEventListener('mouseup', () => keys['Mouse'] = false);
@@ -44,6 +48,13 @@
                }
                if (event.key === "ArrowDown") {
                     keys[event.key] = true;
+               }
+
+               if (event.key === "ArrowRight" || event.key === "W") {
+                    player.throttle = Math.min(player.throttle + 0.05, 1.0);
+               }
+               if (event.key === "ArrowLeft" || event.key === "S") {
+               player.throttle = Math.max(player.throttle - 0.05, 0.0);
                }
           })
 
@@ -66,38 +77,62 @@
                
                player.angle += rotationSpeed;
 
-               if (keys['Mouse']) {
-                    player.vel.y += Math.cos(player.angle) * player.thrustPower;
-                    player.vel.x += Math.sin(player.angle) * player.thrustPower;
-               }
-
                // 1. Update the physics
-                    // Apply Gravity
-                    player.vel.x += player.acc.x
-                    player.vel.y += player.acc.y
+                    // Velocity
+                    let v2 = (player.vel.x ** 2) + (player.vel.y ** 2);
+                    let speed = Math.sqrt(v2)
 
-                    // Apply Drag
-                    player.vel.x *= player.dragFactor;
-                    player.vel.y *= player.dragFactor;
+                    // Angle of Attack (AoA), angle of the nose relative to movement
+                    let flightAngle = Math.atan2(player.vel.y, player.vel.x);
+                    let AoA = player.angle - flightAngle
 
-                    // Lift
-                    let airSpeed = Math.sqrt(player.vel.x**2 + player.vel.y**2);
-                    let liftCoefficient = Math.sin(player.angle + 0.05);
-                    let liftAmount = airSpeed * liftCoefficient * 0.01;
+                    // Coefficients
+                    let Cl = Math.sin(AoA * 2)
+                    let Cd = 0.02 + Math.pow(Cl, 2) / (Math.PI * 7)
 
-                    player.vel.y += liftAmount;
+                    // Force
+                    let liftForce = 0.5 * rho * v2 * player.wingArea * Cl;
+                    let dragForce = 0.5 * rho * v2 * player.wingArea * Cd;
+
+                    // Force to X and Y, Lift is always perpendicular to velocity
+                    let liftX = -liftForce * Math.sin(flightAngle);
+                    let liftY = liftForce * Math.cos(flightAngle);
+
+                    // Drag is always opposite to velocity
+                    let dragX = -dragForce * Math.cos(flightAngle);
+                    let dragY = -dragForce * Math.sin(flightAngle);
+
+                    console.log(dragForce)
+
+                    // Thrust components
+                    player.thrust = player.throttle * player.maxThrust
+
+                    let thrustX = Math.cos(player.angle) * player.thrust;
+                    let thrustY = Math.sin(player.angle) * player.thrust;
+
+                    // Total Forces
+                    let totalForceX = thrustX + dragX + liftX;
+                    let totalForceY = thrustY + dragY + liftY + (player.mass * -9.81);
+
+                    // Acceleration (a = F/m)
+                    let ax = totalForceX / player.mass;
+                    let ay = totalForceY / player.mass;
+
+                    // Integrate (v = v + a*t)
+                    player.vel.x += ax * 1/60;
+                    player.vel.y += ay * 1/60;
                     
-                    // Move Position
-                    player.pos.x += player.vel.x
-                    player.pos.y += player.vel.y
+                    // Update position
+                    player.pos.x += player.vel.x;
+                    player.pos.y += player.vel.y;
 
                // 2. Logic
                if (player.pos.y < 0) {
                     player.pos.y = 0;
-                    player.vel.y = 0;
+                    player.vel.y = Math.max(0, player.vel.y);
                     
                     // Add "rolling friction"
-                    player.vel.x *= 0.99;
+                    player.vel.x *= 0.995;
                }
 
                if (player.pos.y > canvas.height - 50) {
@@ -110,6 +145,16 @@
 
                // Rendering
                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+               // Draw Dashboard (Top Left)
+               ctx.save(); // Save state
+               ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset scaling/translation for text
+               ctx.fillStyle = "white";
+               ctx.font = "16px monospace";
+               ctx.fillText(`Throttle: ${Math.round(player.throttle * 100)}%`, 20, 30);
+               ctx.fillText(`Airspeed: ${Math.round(Math.sqrt(v2))} m/s`, 20, 50);
+               ctx.fillText(`Altitude: ${Math.round(player.pos.y)} m`, 20, 70);
+               ctx.restore(); // Go back to physics coordinates
 
                ctx.fillStyle = "green";
                ctx.fillRect(0, canvas.height - 10, canvas.width, 10)
