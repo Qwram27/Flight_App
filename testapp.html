@@ -111,11 +111,14 @@
                // Rendering
                ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+               ctx.fillStyle = "green";
+               ctx.fillRect(0, canvas.height - 10, canvas.width, 10)
+               
+               let screenX = (canvas.height / 2) - 25;
                let screenY = canvas.height - player.pos.y - 40;
 
                ctx.fillStyle = "#40AA1A";
                ctx.fillRect(player.pos.x, screenY, 40, 40);
-
 
                ctx.strokeStyle = "#40DC22";
                ctx.lineWidth = 5;
