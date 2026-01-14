@@ -30,7 +30,7 @@
                vel: {x: 0, y: 0}, // Velocity
                acc: {x: 0, y: -0.2}, // Acceleration
                angle: 0, // Angle
-               thrustPower: 0.05, // Thrust
+               thrustPower: 0.2, // Thrust
                dragFactor: 0.99, // Air resistance
 
           };
@@ -57,9 +57,14 @@
           })
 
           function update() {
+
                // 0. Inputs
-               if (keys.ArrowUp) { player.angle += 0.01; }
-               if (keys.ArrowDown) { player.angle -= 0.01; }
+               let rotationSpeed = 0;
+
+               if (keys.ArrowUp) { rotationSpeed = 0.005; }
+               if (keys.ArrowDown) { rotationSpeed -= 0.005; }
+               
+               player.angle += rotationSpeed;
 
                if (keys['Mouse']) {
                     player.vel.y += Math.cos(player.angle) * player.thrustPower;
@@ -76,8 +81,11 @@
                     player.vel.y *= player.dragFactor;
 
                     // Lift
-                    let liftAmount = player.vel.x * Math.sin(player.angle) * 0.1;
-                    player.vel.y += liftAmount
+                    let airSpeed = Math.sqrt(player.vel.x**2 + player.vel.y**2);
+                    let liftCoefficient = Math.sin(player.angle + 0.05);
+                    let liftAmount = airSpeed * liftCoefficient * 0.01;
+
+                    player.vel.y += liftAmount;
                     
                     // Move Position
                     player.pos.x += player.vel.x
