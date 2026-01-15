@@ -29,7 +29,7 @@
                vel: {x: 0, y: 0}, // Velocity
                angle: 0, // Angle
                mass: 1100, // kg
-               wingArea: 20, // m^2
+               wingArea: 25, // m^2
                throttle: 0, // Throttle amount (0-1)
                thrust: 0, // Newtons
                maxThrust: 5000, // Newtons
@@ -42,7 +42,7 @@
           const rho = 1.22; // kg/m^3
           const WORLD_WIDTH = 2500;
           let cameraX = player.pos.x - (canvas.width * 0.2)
-          let cameraY = -17;
+          let cameraY = 0;
 
           const trees = [
                {x: 100, scale: 1.2},
@@ -137,9 +137,13 @@
 
                     if (AoA > 0.4) AoA = 0.4;
                     if (AoA < -0.4) AoA = -0.4;
+                    
+                    let airEffectiveness = Math.min(speed / 200, 1.0);
+                    player.angle -= AoA * 0.02 * airEffectiveness;
+                    player.angle *= 0.997;
 
                     // Coefficients
-                    let Cl = Math.sin(AoA * 2);
+                    let Cl = Math.sin(AoA * 2) * 1.2;
                     let Cd = 0.02 + Math.pow(Cl, 2) / (Math.PI * 7);
                     
                     if (player.airBrake) {
