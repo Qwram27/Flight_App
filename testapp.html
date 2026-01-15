@@ -52,7 +52,7 @@
                     keys[event.key] = true;
                }
                
-               if (event.key === "Space") {
+               if (event.key === " ") {
                     player.airBrake = true;
                };
 
@@ -71,7 +71,7 @@
                if (event.key === "ArrowDown") {
                     keys[event.key] = false;
                }
-               if (event.key === "Space") {
+               if (event.key === " ") {
                     player.airBrake = false;
                };
           })
@@ -173,6 +173,13 @@
                ctx.fillText(`Throttle: ${Math.round(player.throttle * 100)}%`, 20, 30);
                ctx.fillText(`Airspeed: ${Math.round(Math.sqrt(v2))} m/s`, 20, 50);
                ctx.fillText(`Altitude: ${Math.round(player.pos.y)} m`, 20, 70);
+
+               if (player.airBrake) {
+                    ctx.fillText(`Airbrake: on`, 20, 90);}
+               else {
+                         ctx.fillText(`Airbrake: off`, 20, 90);
+               }
+
                ctx.restore(); // Go back to physics coordinates
 
                ctx.fillStyle = "green";
