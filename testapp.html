@@ -46,6 +46,19 @@
                {x: 500, scale: 1},
                {x: 900, scale: 1.1},
           ];
+          
+          function addTree(wolrdX, scale) {
+               let screenX = worldX - cameraX;
+               let groundY = canvas.height - 10;
+
+               // Trunk
+               ctx.fillStyle = "#4D2600"; // Brown
+               ctx.fillRect(screenX, groundY - (50 * scale), 20 * scale, 50 * scale);
+               
+               // Leaf
+               ctx.fillStyle = "#40CC1A";
+               ctx.fillRect(screenX - (20 * scale), groundY - (100 * scale), 60 * scale, 50 * scale);
+          };
 
           window.addEventListener('mousedown', () => keys['Mouse'] = true);
           window.addEventListener('mouseup', () => keys['Mouse'] = false);
@@ -172,7 +185,7 @@
                if (player.airBrake) {
                     ctx.fillText(`Airbrake: on`, 20, 90);}
                else {
-                         ctx.fillText(`Airbrake: off`, 20, 90);
+                    ctx.fillText(`Airbrake: off`, 20, 90);
                }
 
                ctx.restore(); // Go back to physics coordinates
@@ -182,7 +195,6 @@
                ctx.fillRect(0, canvas.height - 10, canvas.width, 10)
                
                let cameraX = player.pos.x - (canvas.width * 0.2);
-
 
                let screenX = player.pos.x - cameraX;
                let screenY = canvas.height - player.pos.y - 40;
