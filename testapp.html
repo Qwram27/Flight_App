@@ -151,17 +151,6 @@
                     player.pos.x += player.vel.x;
                     player.pos.y += player.vel.y;
 
-                    //console.log()
-
-               // 2. Logic
-               if (player.pos.y > canvas.height - 50) {
-                    player.pos.y = canvas.height - 50;
-               }
-
-               if (player.pos.x > canvas.width || player.pos.x < 0) {
-                    player.pos.x = 0;
-               }
-
                // Rendering
                ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -182,21 +171,26 @@
 
                ctx.restore(); // Go back to physics coordinates
 
+               // Grass
                ctx.fillStyle = "green";
                ctx.fillRect(0, canvas.height - 10, canvas.width, 10)
                
-               let screenX = (canvas.height / 2) - 25;
+               let cameraX = player.pos.x - (canvas.width * 0.2);
+
+
+               let screenX = player.pos.x - cameraX;
                let screenY = canvas.height - player.pos.y - 40;
 
+               // Player
                ctx.fillStyle = "#40AA1A";
-               ctx.fillRect(player.pos.x, screenY, 40, 40);
+               ctx.fillRect(screenX, screenY, 40, 40);
 
                ctx.strokeStyle = "#40DC22";
                ctx.lineWidth = 5;
                ctx.beginPath();
-               ctx.moveTo(player.pos.x + 20, screenY + 20);
+               ctx.moveTo(screenX + 20, screenY + 20);
 
-               ctx.lineTo(player.pos.x + 20 + Math.cos(player.angle) * 50, screenY + 20 - Math.sin(player.angle) * 50);
+               ctx.lineTo(screenX + 20 + Math.cos(player.angle) * 50, screenY + 20 - Math.sin(player.angle) * 50);
                ctx.stroke();
 
                // Render loop
