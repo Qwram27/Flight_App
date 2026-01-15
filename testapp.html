@@ -48,16 +48,16 @@
           ];
           
           function addTree(wolrdX, scale) {
-               let screenX = worldX - cameraX;
+               let treeX = worldX - cameraX;
                let groundY = canvas.height - 10;
 
                // Trunk
                ctx.fillStyle = "#4D2600"; // Brown
-               ctx.fillRect(screenX, groundY - (50 * scale), 20 * scale, 50 * scale);
+               ctx.fillRect(treeX, groundY - (50 * scale), 20 * scale, 50 * scale);
                
                // Leaf
                ctx.fillStyle = "#40CC1A";
-               ctx.fillRect(screenX - (20 * scale), groundY - (100 * scale), 60 * scale, 50 * scale);
+               ctx.fillRect(treeX - (20 * scale), groundY - (100 * scale), 60 * scale, 50 * scale);
           };
 
           window.addEventListener('mousedown', () => keys['Mouse'] = true);
@@ -195,10 +195,11 @@
                ctx.fillRect(0, canvas.height - 10, canvas.width, 10)
                
                // Trees
-               for (let i = 0; i != 2; i++) {
+               for (let i = 0; i <= 2; i++) {
                     addTree(trees[i].x, trees[i].scale);
                }
                
+               console.log(cameraX);
                let cameraX = player.pos.x - (canvas.width * 0.2);
 
                let screenX = player.pos.x - cameraX;
