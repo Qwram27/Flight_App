@@ -39,7 +39,13 @@
 
           };
 
-          const rho = 1.22 // kg/m^3
+          const rho = 1.22; // kg/m^3
+
+          const trees = [
+               {x: 200, scale: 0.77},
+               {x: 500, scale: 1},
+               {x: 900, scale: 1.1},
+          ];
 
           window.addEventListener('mousedown', () => keys['Mouse'] = true);
           window.addEventListener('mouseup', () => keys['Mouse'] = false);
