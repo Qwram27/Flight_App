@@ -15,6 +15,9 @@
           const canvas = document.getElementById('screen');
           const ctx = canvas.getContext('2d');
 
+          const airplaneImg = new Image();
+          airplaneImg.src = 'airplane.png';
+
           // Set the size of canvas to the window size
           canvas.width = window.innerWidth
           canvas.height = window.innerHeight
@@ -191,23 +194,6 @@
 
                // Rendering
                ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-               // Top Left Info
-               ctx.save(); // Save state
-               ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset scaling/translation for text
-               ctx.fillStyle = "white";
-               ctx.font = "16px monospace";
-               ctx.fillText(`Throttle: ${Math.round(player.throttle * 100)}%`, 20, 30);
-               ctx.fillText(`Airspeed: ${Math.round(Math.sqrt(v2))} m/s`, 20, 50);
-               ctx.fillText(`Altitude: ${Math.round(player.pos.y)} m`, 20, 70);
-
-               if (player.airBrake) {
-                    ctx.fillText(`Airbrake: ON`, 20, 90);}
-               else {
-                    ctx.fillText(`Airbrake: OFF`, 20, 90);
-               }
-
-               ctx.restore(); // Go back to physics coordinates
                
                // Camera Logic
                cameraX = player.pos.x - (canvas.width * 0.2);
@@ -228,25 +214,38 @@
                ctx.fillStyle = "green";
                ctx.fillRect(0, groundY2, canvas.width, canvas.height - groundY2 + 500);
                
-               // Trees
+               // Forest
                for (let i = 0; i < 3; i++) {
                     addTree(loopedX(trees[i].x), trees[i].scale);
                }
                
                // Player
-               ctx.fillStyle = "#40AA1A";
-               ctx.fillRect(screenX, screenY, 40, 40);
+              ctx.save();
+              ctx.translate(screenX, screenY);
+              ctx.rotate(-player.angle)
 
-               ctx.strokeStyle = "#40DC22";
-               ctx.lineWidth = 5;
-               ctx.beginPath();
-               ctx.moveTo(screenX + 20, screenY + 20);
+              ctx.drawImage(airplaneImg, -50, -50, 200, 100);
+              ctx.restore();
 
-               ctx.lineTo(screenX + 20 + Math.cos(player.angle) * 50, screenY + 20 - Math.sin(player.angle) * 50);
-               ctx.stroke();
-
-               // Forest
+               // Tree
                addTree(loopedX(trees[3].x), trees[3].scale);
+
+               // Top left Info
+               ctx.save(); // Save state
+               ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset scaling/translation for text
+               ctx.fillStyle = "white";
+               ctx.font = "16px monospace";
+               ctx.fillText(`Throttle: ${Math.round(player.throttle * 100)}%`, 20, 30);
+               ctx.fillText(`Airspeed: ${Math.round(Math.sqrt(v2))} m/s`, 20, 50);
+               ctx.fillText(`Altitude: ${Math.round(player.pos.y)} m`, 20, 70);
+
+               if (player.airBrake) {
+                    ctx.fillText(`Airbrake: ON`, 20, 90);}
+               else {
+                    ctx.fillText(`Airbrake: OFF`, 20, 90);
+               }
+
+               ctx.restore();
 
                // Render loop
                requestAnimationFrame(update);
