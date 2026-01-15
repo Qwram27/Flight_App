@@ -11,7 +11,7 @@
      <canvas id="screen"></canvas>
 
      <script>
-          // JavaScript
+          // Javaa
           const canvas = document.getElementById('screen');
           const ctx = canvas.getContext('2d');
 
@@ -33,7 +33,9 @@
                wingArea: 20, // m^2
                throttle: 0, // Throttle amount (0-1)
                thrust: 0, // Newtons
-               maxThrust: 5000 // Newtons
+               maxThrust: 5000, // Newtons
+               airBrake: false, // Air brake
+               airBrakeArea: 5, // m^2 Area
 
           };
 
@@ -49,6 +51,10 @@
                if (event.key === "ArrowDown") {
                     keys[event.key] = true;
                }
+               
+               if (event.key === "Space") {
+                    player.airBrake = true;
+               };
 
                if (event.key === "ArrowRight" || event.key === "W") {
                     player.throttle = Math.min(player.throttle + 0.05, 1.0);
@@ -65,6 +71,9 @@
                if (event.key === "ArrowDown") {
                     keys[event.key] = false;
                }
+               if (event.key === "Space") {
+                    player.airBrake = false;
+               };
           })
 
           function update() {
@@ -90,8 +99,13 @@
                     if (AoA < -0.4) AoA = -0.4;
 
                     // Coefficients
-                    let Cl = Math.sin(AoA * 2)
-                    let Cd = 0.02 + Math.pow(Cl, 2) / (Math.PI * 7)
+                    let Cl = Math.sin(AoA * 2);
+                    let Cd = 0.02 + Math.pow(Cl, 2) / (Math.PI * 7);
+                    
+                    if (player.airBrake) {
+                         Cl *= 0.7; // for now, later wing area?
+                         Cd += (player.airBrakeArea / player.wingArea) * 1;
+                    }
 
                     // Force, Lift Equation
                     let liftForce = 0.5 * rho * v2 * player.wingArea * Cl;
