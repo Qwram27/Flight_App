@@ -19,14 +19,10 @@
           canvas.width = window.innerWidth
           canvas.height = window.innerHeight
 
-          // Use (0, 0) as bottom left
-          //ctx.translate(0, canvas.height);
-          //ctx.scale(1, -1);
-
           let keys = {};
 
           let player = {
-               pos: {x: 250, y: 500}, // Position
+               pos: {x: 250, y: 0}, // Position
                vel: {x: 0, y: 0}, // Velocity
                angle: 0, // Angle
                mass: 1100, // kg
@@ -34,31 +30,53 @@
                throttle: 0, // Throttle amount (0-1)
                thrust: 0, // Newtons
                maxThrust: 5000, // Newtons
+               
                airBrake: false, // Air brake
                airBrakeArea: 5, // m^2 Area
 
           };
 
           const rho = 1.22; // kg/m^3
+          const WORLD_WIDTH = 2500;
+          let cameraX = player.pos.x - (canvas.width * 0.2)
+          let cameraY = -17;
 
           const trees = [
-               {x: 200, scale: 0.77},
-               {x: 500, scale: 1},
-               {x: 900, scale: 1.1},
+               {x: 100, scale: 1.2},
+               {x: 1250, scale: 1.7},
+               {x: 1770, scale: 1.5},
+               {x: 700, scale: 2},
           ];
           
-          function addTree(wolrdX, scale) {
+          function addTree(worldX, scale) {
                let treeX = worldX - cameraX;
-               let groundY = canvas.height - 10;
+               let groundY = (canvas.height - 17) + cameraY
 
                // Trunk
-               ctx.fillStyle = "#4D2600"; // Brown
-               ctx.fillRect(treeX, groundY - (50 * scale), 20 * scale, 50 * scale);
+               ctx.fillStyle = "#462C12";
+               let trunkHeight = (scale == 2 ? 40 : 29) * scale;
+               ctx.fillRect(treeX, groundY - trunkHeight, 20 * scale, trunkHeight);
+
+               if (scale == 2) {
+                    ctx.fillRect(treeX, groundY - trunkHeight + 17, 20 * scale, trunkHeight);}
+               else {
+                    ctx.fillRect(treeX, groundY - trunkHeight, 20 * scale, trunkHeight);
+               }
                
                // Leaf
-               ctx.fillStyle = "#40CC1A";
-               ctx.fillRect(treeX - (20 * scale), groundY - (100 * scale), 60 * scale, 50 * scale);
+               ctx.fillStyle = "#27792A";
+               ctx.beginPath();
+               ctx.moveTo(treeX - (20 * scale), groundY - trunkHeight);
+               ctx.lineTo(treeX + (10 * scale), groundY - (150 * scale));
+               ctx.lineTo(treeX + (40 * scale), groundY - (29 * scale));
+               ctx.fill();
           };
+
+          function loopedX(originalX) {
+               let relativeX = (originalX - cameraX) % WORLD_WIDTH
+               if (relativeX < -500) relativeX += WORLD_WIDTH;
+               return cameraX + relativeX;
+          }
 
           window.addEventListener('mousedown', () => keys['Mouse'] = true);
           window.addEventListener('mouseup', () => keys['Mouse'] = false);
@@ -122,7 +140,7 @@
                     let Cd = 0.02 + Math.pow(Cl, 2) / (Math.PI * 7);
                     
                     if (player.airBrake) {
-                         Cl *= 0.7; // for now, later wing area?
+                         Cl *= 0.9; // for now, later wing area?
                          Cd += (player.airBrakeArea / player.wingArea) * 1;
                     }
 
@@ -170,10 +188,11 @@
                     player.pos.x += player.vel.x;
                     player.pos.y += player.vel.y;
 
+
                // Rendering
                ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-               // Draw Dashboard (Top Left)
+               // Top Left Info
                ctx.save(); // Save state
                ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset scaling/translation for text
                ctx.fillStyle = "white";
@@ -183,28 +202,37 @@
                ctx.fillText(`Altitude: ${Math.round(player.pos.y)} m`, 20, 70);
 
                if (player.airBrake) {
-                    ctx.fillText(`Airbrake: on`, 20, 90);}
+                    ctx.fillText(`Airbrake: ON`, 20, 90);}
                else {
-                    ctx.fillText(`Airbrake: off`, 20, 90);
+                    ctx.fillText(`Airbrake: OFF`, 20, 90);
                }
 
                ctx.restore(); // Go back to physics coordinates
+               
+               // Camera Logic
+               cameraX = player.pos.x - (canvas.width * 0.2);
+               cameraY = 0;
+
+               let followAspect = canvas.height * 0.5;
+
+               if (player.pos.y > followAspect) {
+                    cameraY = player.pos.y - followAspect
+               }
+
+               let groundY2 = (canvas.height - 17) + cameraY
+
+               let screenX = player.pos.x - cameraX;
+               let screenY = canvas.height - (player.pos.y - cameraY) - 40;
 
                // Grass
                ctx.fillStyle = "green";
-               ctx.fillRect(0, canvas.height - 10, canvas.width, 10)
+               ctx.fillRect(0, groundY2, canvas.width, canvas.height - groundY2 + 500);
                
                // Trees
-               for (let i = 0; i <= 2; i++) {
-                    addTree(trees[i].x, trees[i].scale);
+               for (let i = 0; i < 3; i++) {
+                    addTree(loopedX(trees[i].x), trees[i].scale);
                }
                
-               console.log(cameraX);
-               let cameraX = player.pos.x - (canvas.width * 0.2);
-
-               let screenX = player.pos.x - cameraX;
-               let screenY = canvas.height - player.pos.y - 40;
-
                // Player
                ctx.fillStyle = "#40AA1A";
                ctx.fillRect(screenX, screenY, 40, 40);
@@ -216,6 +244,9 @@
 
                ctx.lineTo(screenX + 20 + Math.cos(player.angle) * 50, screenY + 20 - Math.sin(player.angle) * 50);
                ctx.stroke();
+
+               // Forest
+               addTree(loopedX(trees[3].x), trees[3].scale);
 
                // Render loop
                requestAnimationFrame(update);
