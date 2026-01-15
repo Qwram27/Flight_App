@@ -29,7 +29,7 @@
                vel: {x: 0, y: 0}, // Velocity
                angle: 0, // Angle
                mass: 1100, // kg
-               wingArea: 25, // m^2
+               wingArea: 22, // m^2
                throttle: 0, // Throttle amount (0-1)
                thrust: 0, // Newtons
                maxThrust: 5000, // Newtons
@@ -138,9 +138,11 @@
                     if (AoA > 0.4) AoA = 0.4;
                     if (AoA < -0.4) AoA = -0.4;
                     
-                    let airEffectiveness = Math.min(speed / 200, 1.0);
-                    player.angle -= AoA * 0.02 * airEffectiveness;
-                    player.angle *= 0.997;
+                    if (player.pos.y < 500) {
+                         let airEffectiveness = Math.min(speed / 200, 1.0);
+                         player.angle -= AoA * 0.02 * airEffectiveness;
+                         player.angle *= 0.997;
+                    }
 
                     // Coefficients
                     let Cl = Math.sin(AoA * 2) * 1.2;
